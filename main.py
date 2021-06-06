@@ -12,6 +12,7 @@ from impf import __version__ as v
 from impf.alert import send_alert
 from impf.api import API
 from impf.browser import Browser
+from impf.exceptions import WorkflowException
 
 logger = logging.getLogger(__name__)
 b = None  # helper variable for keeping browser open
@@ -96,8 +97,12 @@ def impf_me(location: dict):
             x.reinit(**location)
 
     # Continue with normal loop
-    try: x.control_main()
-    except RecursionError: pass
+    try:
+        x.control_main()
+    except WorkflowException as e:
+        # Something unexpected happened, we'll continue with the next loop
+        logger.info(e)
+        pass
 
     logger.info(f'Waiting until {(datetime.now() + timedelta(seconds=settings.WAIT_LOCATIONS)).strftime("%H:%M:%S")} '
                 f'before checking the next location')
